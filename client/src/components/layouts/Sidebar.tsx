@@ -9,7 +9,8 @@ import {
   Settings, 
   Gauge, 
   LifeBuoy,
-  LogOut
+  LogOut,
+  AlertTriangle
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -27,6 +28,8 @@ export function Sidebar({ onCloseSidebar }: SidebarProps) {
   const [isOnInvoices] = useRoute("/invoices");
   const [isOnPayments] = useRoute("/payments");
   const [isOnReports] = useRoute("/reports");
+  const [isOnComplaints] = useRoute("/complaints");
+  const [isOnComplaintDetail] = useRoute("/complaint-detail/:id");
 
   // Menu items
   const menuItems = [
@@ -59,6 +62,12 @@ export function Sidebar({ onCloseSidebar }: SidebarProps) {
       icon: <DollarSign className="h-5 w-5" />, 
       href: "/payments", 
       active: isOnPayments 
+    },
+    { 
+      name: "Complaints", 
+      icon: <AlertTriangle className="h-5 w-5" />, 
+      href: "/complaints", 
+      active: isOnComplaints || isOnComplaintDetail 
     },
     { 
       name: "Reports", 
