@@ -147,13 +147,13 @@ export default function Payments() {
                     <SelectValue placeholder="Filter by Date" />
                   </SelectTrigger>
                   <SelectContent>
-                  <SelectItem value="all">All Dates</SelectItem>
-                  <SelectItem value="this_month">This Month</SelectItem>
-                  <SelectItem value="last_month">Last Month</SelectItem>
-                  <SelectItem value="last_3_months">Last 3 Months</SelectItem>
-                  <SelectItem value="custom">Custom Range</SelectItem>
-                </SelectContent>
-              </Select>
+                    <SelectItem value="all">All Dates</SelectItem>
+                    <SelectItem value="this_month">This Month</SelectItem>
+                    <SelectItem value="last_month">Last Month</SelectItem>
+                    <SelectItem value="last_3_months">Last 3 Months</SelectItem>
+                    <SelectItem value="custom">Custom Range</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
               <Button variant="outline" size="icon" onClick={handleExport} title="Export Payments">
                 <Download className="h-4 w-4" />
