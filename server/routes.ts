@@ -9,7 +9,9 @@ import {
   insertMeterReadingSchema, 
   insertInvoiceSchema, 
   insertPaymentSchema,
-  insertCustomerDocumentSchema
+  insertCustomerDocumentSchema,
+  insertComplaintSchema,
+  insertComplaintCommentSchema
 } from "@shared/schema";
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -467,6 +469,123 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     } catch (error) {
       res.status(500).json({ message: "Error retrieving dashboard data" });
+    }
+  });
+
+  // Complaint routes
+  app.get("/api/complaints", async (req: Request, res: Response) => {
+    try {
+      const complaints = await storage.getComplaints();
+      res.status(200).json(complaints);
+    } catch (error) {
+      res.status(500).json({ message: "Error retrieving complaints" });
+    }
+  });
+
+  app.get("/api/complaints/:id", async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid ID format" });
+      }
+
+      const complaint = await storage.getComplaint(id);
+      if (!complaint) {
+        return res.status(404).json({ message: "Complaint not found" });
+      }
+
+      res.status(200).json(complaint);
+    } catch (error) {
+      res.status(500).json({ message: "Error retrieving complaint" });
+    }
+  });
+
+  app.get("/api/customers/:customerId/complaints", async (req: Request, res: Response) => {
+    try {
+      const customerId = req.params.customerId;
+      const complaints = await storage.getComplaintsByCustomerId(customerId);
+      res.status(200).json(complaints);
+    } catch (error) {
+      res.status(500).json({ message: "Error retrieving complaints" });
+    }
+  });
+
+  app.post("/api/complaints", async (req: Request, res: Response) => {
+    try {
+      const validatedComplaint = insertComplaintSchema.parse(req.body);
+      
+      // Check if customer exists
+      const customer = await storage.getCustomerByCustomerId(validatedComplaint.customerId);
+      if (!customer) {
+        return res.status(404).json({ message: "Customer not found" });
+      }
+      
+      // If meterId is provided, check if meter exists
+      if (validatedComplaint.meterId) {
+        const meter = await storage.getWaterMeterByMeterId(validatedComplaint.meterId);
+        if (!meter) {
+          return res.status(404).json({ message: "Water meter not found" });
+        }
+      }
+      
+      const complaint = await storage.createComplaint(validatedComplaint);
+      res.status(201).json(complaint);
+    } catch (error) {
+      res.status(400).json({ message: "Invalid complaint data" });
+    }
+  });
+
+  app.put("/api/complaints/:id", async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid ID format" });
+      }
+
+      const existingComplaint = await storage.getComplaint(id);
+      if (!existingComplaint) {
+        return res.status(404).json({ message: "Complaint not found" });
+      }
+
+      const updatedComplaint = await storage.updateComplaint(id, req.body);
+      res.status(200).json(updatedComplaint);
+    } catch (error) {
+      res.status(400).json({ message: "Error updating complaint" });
+    }
+  });
+
+  app.get("/api/complaints/:complaintId/comments", async (req: Request, res: Response) => {
+    try {
+      const complaintId = req.params.complaintId;
+      const comments = await storage.getComplaintComments(complaintId);
+      res.status(200).json(comments);
+    } catch (error) {
+      res.status(500).json({ message: "Error retrieving complaint comments" });
+    }
+  });
+
+  app.post("/api/complaints/:complaintId/comments", async (req: Request, res: Response) => {
+    try {
+      const complaintId = req.params.complaintId;
+      
+      // Check if complaint exists
+      const complaint = await storage.getComplaintByComplaintId(complaintId);
+      if (!complaint) {
+        return res.status(404).json({ message: "Complaint not found" });
+      }
+      
+      const commentData = {
+        complaintId,
+        userId: req.body.userId,
+        comment: req.body.comment,
+        isInternal: req.body.isInternal || false
+      };
+      
+      const validatedComment = insertComplaintCommentSchema.parse(commentData);
+      const comment = await storage.createComplaintComment(validatedComment);
+      res.status(201).json(comment);
+    } catch (error) {
+      res.status(400).json({ message: "Invalid comment data" });
     }
   });
 

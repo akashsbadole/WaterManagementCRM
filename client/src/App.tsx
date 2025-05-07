@@ -12,6 +12,8 @@ import Meters from "@/pages/meters";
 import Invoices from "@/pages/invoices";
 import Payments from "@/pages/payments";
 import Reports from "@/pages/reports";
+import Complaints from "@/pages/complaints";
+import ComplaintDetail from "@/pages/complaint-detail";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -24,6 +26,8 @@ function Router() {
         <Route path="/invoices" component={Invoices} />
         <Route path="/payments" component={Payments} />
         <Route path="/reports" component={Reports} />
+        <Route path="/complaints" component={Complaints} />
+        <Route path="/complaint-detail/:id" component={ComplaintDetail} />
         <Route component={NotFound} />
       </Switch>
     </MainLayout>
