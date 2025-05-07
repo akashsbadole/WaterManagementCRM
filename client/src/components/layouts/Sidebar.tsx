@@ -85,23 +85,24 @@ export function Sidebar({ onCloseSidebar }: SidebarProps) {
       <div className="flex-1 py-6 overflow-y-auto">
         <nav className="px-2 space-y-1">
           {menuItems.map((item) => (
-            <Link 
-              key={item.name} 
-              href={item.href}
-              onClick={onCloseSidebar}
-            >
-              <a 
-                className={cn(
-                  "flex items-center px-4 py-3 text-sm font-medium rounded-md transition-colors",
-                  item.active
-                    ? "bg-primary-light/10 text-primary"
-                    : "text-gray-700 hover:bg-gray-100 hover:text-primary-dark"
-                )}
+            <div key={item.name}>
+              <Link 
+                href={item.href}
+                onClick={onCloseSidebar}
               >
-                {item.icon}
-                <span className="ml-3">{item.name}</span>
-              </a>
-            </Link>
+                <div 
+                  className={cn(
+                    "flex items-center px-4 py-3 text-sm font-medium rounded-md transition-colors cursor-pointer",
+                    item.active
+                      ? "bg-primary-light/10 text-primary"
+                      : "text-gray-700 hover:bg-gray-100 hover:text-primary-dark"
+                  )}
+                >
+                  {item.icon}
+                  <span className="ml-3">{item.name}</span>
+                </div>
+              </Link>
+            </div>
           ))}
         </nav>
 
@@ -111,10 +112,10 @@ export function Sidebar({ onCloseSidebar }: SidebarProps) {
           </h3>
           <div className="mt-2 space-y-1">
             <Link href="/settings">
-              <a className="flex items-center px-4 py-3 text-sm font-medium rounded-md text-gray-700 hover:bg-gray-100 hover:text-primary-dark">
+              <div className="flex items-center px-4 py-3 text-sm font-medium rounded-md text-gray-700 hover:bg-gray-100 hover:text-primary-dark cursor-pointer">
                 <Settings className="h-5 w-5 mr-3 text-gray-400" />
                 System Settings
-              </a>
+              </div>
             </Link>
           </div>
         </div>
