@@ -5,7 +5,9 @@ import {
   meterReadings, MeterReading, InsertMeterReading,
   invoices, Invoice, InsertInvoice,
   payments, Payment, InsertPayment,
-  customerDocuments, CustomerDocument, InsertCustomerDocument
+  customerDocuments, CustomerDocument, InsertCustomerDocument,
+  complaints, Complaint, InsertComplaint,
+  complaintComments, ComplaintComment, InsertComplaintComment
 } from "@shared/schema";
 
 export interface IStorage {
@@ -55,6 +57,18 @@ export interface IStorage {
   // Customer Document methods
   getCustomerDocuments(customerId: string): Promise<CustomerDocument[]>;
   createCustomerDocument(document: InsertCustomerDocument): Promise<CustomerDocument>;
+  
+  // Complaint methods
+  getComplaints(): Promise<Complaint[]>;
+  getComplaint(id: number): Promise<Complaint | undefined>;
+  getComplaintByComplaintId(complaintId: string): Promise<Complaint | undefined>;
+  getComplaintsByCustomerId(customerId: string): Promise<Complaint[]>;
+  createComplaint(complaint: InsertComplaint): Promise<Complaint>;
+  updateComplaint(id: number, complaint: Partial<InsertComplaint>): Promise<Complaint | undefined>;
+  
+  // Complaint Comment methods
+  getComplaintComments(complaintId: string): Promise<ComplaintComment[]>;
+  createComplaintComment(comment: InsertComplaintComment): Promise<ComplaintComment>;
 }
 
 export class MemStorage implements IStorage {
@@ -65,6 +79,8 @@ export class MemStorage implements IStorage {
   private invoiceStore: Map<number, Invoice>;
   private paymentStore: Map<number, Payment>;
   private customerDocumentStore: Map<number, CustomerDocument>;
+  private complaintStore: Map<number, Complaint>;
+  private complaintCommentStore: Map<number, ComplaintComment>;
   
   private userId: number;
   private customerId: number;
@@ -73,6 +89,8 @@ export class MemStorage implements IStorage {
   private invoiceId: number;
   private paymentId: number;
   private customerDocumentId: number;
+  private complaintId: number;
+  private complaintCommentId: number;
   
   constructor() {
     this.userStore = new Map();
@@ -82,6 +100,8 @@ export class MemStorage implements IStorage {
     this.invoiceStore = new Map();
     this.paymentStore = new Map();
     this.customerDocumentStore = new Map();
+    this.complaintStore = new Map();
+    this.complaintCommentStore = new Map();
     
     this.userId = 1;
     this.customerId = 1;
@@ -90,6 +110,8 @@ export class MemStorage implements IStorage {
     this.invoiceId = 1;
     this.paymentId = 1;
     this.customerDocumentId = 1;
+    this.complaintId = 1;
+    this.complaintCommentId = 1;
     
     // Initialize with sample admin user
     this.createUser({
@@ -360,6 +382,82 @@ export class MemStorage implements IStorage {
     };
     this.customerDocumentStore.set(id, document);
     return document;
+  }
+
+  // Complaint methods
+  async getComplaints(): Promise<Complaint[]> {
+    return Array.from(this.complaintStore.values());
+  }
+  
+  async getComplaint(id: number): Promise<Complaint | undefined> {
+    return this.complaintStore.get(id);
+  }
+  
+  async getComplaintByComplaintId(complaintId: string): Promise<Complaint | undefined> {
+    return Array.from(this.complaintStore.values()).find(
+      (complaint) => complaint.complaintId === complaintId
+    );
+  }
+  
+  async getComplaintsByCustomerId(customerId: string): Promise<Complaint[]> {
+    return Array.from(this.complaintStore.values())
+      .filter((complaint) => complaint.customerId === customerId)
+      .sort((a, b) => {
+        const dateA = new Date(a.submissionDate).getTime();
+        const dateB = new Date(b.submissionDate).getTime();
+        return dateB - dateA; // Sort by descending date
+      });
+  }
+  
+  async createComplaint(insertComplaint: InsertComplaint): Promise<Complaint> {
+    const id = this.complaintId++;
+    const complaint: Complaint = { 
+      ...insertComplaint, 
+      id,
+      resolutionDate: null
+    };
+    this.complaintStore.set(id, complaint);
+    return complaint;
+  }
+  
+  async updateComplaint(id: number, complaintUpdate: Partial<InsertComplaint>): Promise<Complaint | undefined> {
+    const existingComplaint = this.complaintStore.get(id);
+    if (!existingComplaint) return undefined;
+    
+    // If status is being changed to 'resolved', set resolution date
+    if (complaintUpdate.status === 'resolved' && existingComplaint.status !== 'resolved') {
+      complaintUpdate.resolutionDate = new Date();
+    }
+    
+    const updatedComplaint: Complaint = {
+      ...existingComplaint,
+      ...complaintUpdate
+    };
+    
+    this.complaintStore.set(id, updatedComplaint);
+    return updatedComplaint;
+  }
+  
+  // Complaint Comment methods
+  async getComplaintComments(complaintId: string): Promise<ComplaintComment[]> {
+    return Array.from(this.complaintCommentStore.values())
+      .filter((comment) => comment.complaintId === complaintId)
+      .sort((a, b) => {
+        const dateA = new Date(a.createdAt).getTime();
+        const dateB = new Date(b.createdAt).getTime();
+        return dateA - dateB; // Sort by ascending date (oldest first)
+      });
+  }
+  
+  async createComplaintComment(insertComment: InsertComplaintComment): Promise<ComplaintComment> {
+    const id = this.complaintCommentId++;
+    const comment: ComplaintComment = { 
+      ...insertComment, 
+      id,
+      createdAt: new Date()
+    };
+    this.complaintCommentStore.set(id, comment);
+    return comment;
   }
 }
 

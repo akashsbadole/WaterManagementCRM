@@ -211,3 +211,66 @@ export type InsertPayment = z.infer<typeof insertPaymentSchema>;
 
 export type CustomerDocument = typeof customerDocuments.$inferSelect;
 export type InsertCustomerDocument = z.infer<typeof insertCustomerDocumentSchema>;
+
+// Complaint priority enum
+export const complaintPriorityEnum = pgEnum("complaint_priority", ["low", "medium", "high", "critical"]);
+
+// Complaint status enum
+export const complaintStatusEnum = pgEnum("complaint_status", ["open", "assigned", "in_progress", "resolved", "closed"]);
+
+// Complaint Category enum
+export const complaintCategoryEnum = pgEnum("complaint_category", ["water_quality", "leakage", "billing", "meter", "service", "other"]);
+
+// Complaints
+export const complaints = pgTable("complaints", {
+  id: serial("id").primaryKey(),
+  complaintId: text("complaint_id").notNull().unique(),
+  customerId: text("customer_id").notNull(),
+  meterId: text("meter_id"),
+  category: complaintCategoryEnum("category").notNull(),
+  subject: text("subject").notNull(),
+  description: text("description").notNull(),
+  priority: complaintPriorityEnum("priority").default("medium"),
+  status: complaintStatusEnum("status").default("open"),
+  assignedTo: text("assigned_to"),
+  submissionDate: timestamp("submission_date").defaultNow().notNull(),
+  resolutionDate: timestamp("resolution_date"),
+  attachmentPath: text("attachment_path"),
+});
+
+export const insertComplaintSchema = createInsertSchema(complaints).pick({
+  complaintId: true,
+  customerId: true,
+  meterId: true,
+  category: true,
+  subject: true,
+  description: true,
+  priority: true,
+  status: true,
+  assignedTo: true,
+  submissionDate: true,
+  attachmentPath: true,
+});
+
+// Complaint Comments/Notes
+export const complaintComments = pgTable("complaint_comments", {
+  id: serial("id").primaryKey(),
+  complaintId: text("complaint_id").notNull(),
+  userId: integer("user_id").notNull(),
+  comment: text("comment").notNull(),
+  isInternal: boolean("is_internal").default(false),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const insertComplaintCommentSchema = createInsertSchema(complaintComments).pick({
+  complaintId: true,
+  userId: true,
+  comment: true,
+  isInternal: true,
+});
+
+export type Complaint = typeof complaints.$inferSelect;
+export type InsertComplaint = z.infer<typeof insertComplaintSchema>;
+
+export type ComplaintComment = typeof complaintComments.$inferSelect;
+export type InsertComplaintComment = z.infer<typeof insertComplaintCommentSchema>;

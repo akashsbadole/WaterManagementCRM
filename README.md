@@ -47,21 +47,68 @@ The application will be available at http://localhost:5000
 
 ### Option 2: Run Frontend and Backend Separately
 
-This is useful for development with independent frontend and backend servers:
+This is useful for development with independent frontend and backend servers.
 
-#### Terminal 1 - Backend Server
+#### Configuration Setup
+
+1. Create a `.env` file in the project root (copy from `.env.example`):
+   ```
+   # Server Configuration
+   PORT=5000
+   NODE_ENV=development
+
+   # Frontend Configuration - IMPORTANT for separate frontend/backend
+   VITE_API_BASE_URL=http://localhost:5000
+   ```
+
+2. Create a `.env.local` file in the project root for frontend environment variables:
+   ```
+   VITE_API_BASE_URL=http://localhost:5000
+   ```
+
+#### For Windows:
+
+##### Terminal 1 - Backend Server
+
+```cmd
+REM Go to project root
+cd water-management-crm
+
+REM Set environment variable for Windows
+set NODE_ENV=development
+set PORT=5000
+
+REM Run the backend server only
+npx tsx server/index.ts
+```
+
+The backend will run on http://localhost:5000
+
+##### Terminal 2 - Frontend Development Server
+
+```cmd
+REM Go to project root
+cd water-management-crm
+
+REM Run the frontend development server with Vite directly
+npx vite
+```
+
+The frontend development server will run on http://localhost:5173 with hot module replacement.
+
+#### For Linux/Mac:
+
+##### Terminal 1 - Backend Server
 
 ```bash
 # Go to project root
 cd water-management-crm
 
 # Run the backend server only
-NODE_ENV=development npx tsx server/index.ts
+PORT=5000 NODE_ENV=development npx tsx server/index.ts
 ```
 
-The backend will run on http://localhost:5000
-
-#### Terminal 2 - Frontend Development Server
+##### Terminal 2 - Frontend Development Server
 
 ```bash
 # Go to project root
@@ -71,7 +118,9 @@ cd water-management-crm
 npx vite
 ```
 
-The frontend development server will run on http://localhost:5173 with hot module replacement.
+#### CORS Configuration Note
+
+When running the frontend and backend on different ports, CORS (Cross-Origin Resource Sharing) is automatically enabled in development mode. The server is configured to accept requests from the frontend development server.
 
 ## Project Structure
 

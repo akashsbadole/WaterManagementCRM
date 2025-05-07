@@ -1,5 +1,11 @@
 import { QueryClient, QueryFunction } from "@tanstack/react-query";
 
+// Configure the API base URL based on the environment
+// When running frontend and backend separately, use this variable to point to the backend server
+const API_BASE_URL = import.meta.env.DEV && import.meta.env.VITE_API_BASE_URL 
+  ? import.meta.env.VITE_API_BASE_URL 
+  : ''; // Empty string means same origin (default)
+
 async function throwIfResNotOk(res: Response) {
   if (!res.ok) {
     const text = (await res.text()) || res.statusText;
@@ -7,12 +13,24 @@ async function throwIfResNotOk(res: Response) {
   }
 }
 
+// Helper to prepend API base URL if needed
+function getFullUrl(url: string): string {
+  // Don't modify absolute URLs or URLs that are already prefixed with the base URL
+  if (url.startsWith('http') || url.startsWith(API_BASE_URL)) {
+    return url;
+  }
+  
+  return `${API_BASE_URL}${url}`;
+}
+
 export async function apiRequest(
   method: string,
   url: string,
   data?: unknown | undefined,
 ): Promise<Response> {
-  const res = await fetch(url, {
+  const fullUrl = getFullUrl(url);
+  
+  const res = await fetch(fullUrl, {
     method,
     headers: data ? { "Content-Type": "application/json" } : {},
     body: data ? JSON.stringify(data) : undefined,
@@ -29,7 +47,10 @@ export const getQueryFn: <T>(options: {
 }) => QueryFunction<T> =
   ({ on401: unauthorizedBehavior }) =>
   async ({ queryKey }) => {
-    const res = await fetch(queryKey[0] as string, {
+    // Get the full URL with the API base URL if needed
+    const url = getFullUrl(queryKey[0] as string);
+    
+    const res = await fetch(url, {
       credentials: "include",
     });
 
